@@ -11,15 +11,17 @@ class App {
 
     private static int length = 2;
 
-    private static int nThreads = 10;
-
     public static void main(String[] args) throws Exception {
+        int nThreads;
+
+        // reset result.txt file
         resetResultFile();
 
         // 1 Thread
+        nThreads = 1;
         long start = System.currentTimeMillis();
-        generatePasswords(chars, "", length);
-        System.out.println(String.format("1 Thread - done in %s ms", (System.currentTimeMillis() - start)));
+        generatePasswordsWithMultipleThreads(chars, "", length, nThreads);
+        System.out.println(String.format("%s Thread - done in %s ms", nThreads, (System.currentTimeMillis() - start)));
 
         // 10 threads
         nThreads = 10;
