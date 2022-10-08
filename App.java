@@ -1,6 +1,6 @@
-// import java.io.File;
-// import java.io.FileWriter;
-// import java.io.IOException;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -9,22 +9,23 @@ class App {
 
     private static String chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-    private static int length = 4;
+    private static int length = 2;
 
     private static int nThreads = 10;
 
     public static void main(String[] args) throws Exception {
+        resetResultFile();
 
         // 1 Thread
         long start = System.currentTimeMillis();
         generatePasswords(chars, "", length);
-        System.out.println(String.format("One Thread - done in %s ms.", (System.currentTimeMillis() - start)));
+        System.out.println(String.format("1 Thread - done in %s ms", (System.currentTimeMillis() - start)));
 
         // 10 threads
         nThreads = 10;
         start = System.currentTimeMillis();
         generatePasswordsWithMultipleThreads(chars, "", length, nThreads);
-        System.out.println(String.format("Multiple Threads (%s threads) - done in %s ms.", nThreads, (System.currentTimeMillis() - start)));
+        System.out.println(String.format("%s Threads - done in %s ms", nThreads, (System.currentTimeMillis() - start)));
     }
 
     private static void generatePasswordsWithMultipleThreads(String chars, String cur, int length, int nThreads) throws Exception {
@@ -59,8 +60,7 @@ class App {
         if (chars == null || chars.length() == 0) {
             throw new Exception("Empty Characters !");
         } else if (cur.length() == length) {
-            // System.out.println(cur);
-            // appendLineToFile(cur);
+            appendLineToResultFile(cur);
             return;
         }
 
@@ -72,9 +72,25 @@ class App {
         }
     }
 
-    // private static void appendLineToFile(String password) throws IOException {
+    private static void resetResultFile() {
+        File file = new File("result.txt");
+        if (file.exists()) {
+            file.delete();
+        }
+    }
+
+    // private static void writeStringLinkedListToFile(LinkedList<String> list) throws IOException {
     //     FileWriter fr = new FileWriter(new File("result.txt"), true);
-    //     fr.write(password + "\n");
+    //     for (String password: list) {
+    //         fr.write(password + "\n");
+    //     }
+    //     fr.write("\n");
     //     fr.close();
     // }
+
+    private static void appendLineToResultFile(String line) throws IOException {
+        FileWriter fr = new FileWriter(new File("result.txt"), true);
+        fr.write(line + "\n");
+        fr.close();
+    }
 }
