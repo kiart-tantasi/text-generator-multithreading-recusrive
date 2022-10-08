@@ -1,63 +1,80 @@
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-// import java.util.concurrent.ExecutorService;
-// import java.util.concurrent.Executors;
+// import java.io.File;
+// import java.io.FileWriter;
+// import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 class App {
-    
-    // private static ExecutorService executorService = Executors.newFixedThreadPool(4);
-    
-    private static int passwordLength = 3;
 
-    private static String chars = "0123456789";
+    private static String chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    private static int length = 4;
+
+    private static int nThreads = 10;
 
     public static void main(String[] args) throws Exception {
-        // record start time
+
+        // 1 Thread
         long start = System.currentTimeMillis();
+        generatePasswords(chars, "", length);
+        System.out.println(String.format("One Thread - done in %s ms.", (System.currentTimeMillis() - start)));
 
-        // generate
-        generatePassword(chars, "", passwordLength);
-
-        // record end time
-        long end = System.currentTimeMillis();
-
-        // print used time
-        System.out.println("Done in " + (end - start) + " ms.");
+        // 10 threads
+        nThreads = 10;
+        start = System.currentTimeMillis();
+        generatePasswordsWithMultipleThreads(chars, "", length, nThreads);
+        System.out.println(String.format("Multiple Threads (%s threads) - done in %s ms.", nThreads, (System.currentTimeMillis() - start)));
     }
 
-    // private static void generatePasswordCallables(String chars, String cur, int length) throws Exception {
-    // }
+    private static void generatePasswordsWithMultipleThreads(String chars, String cur, int length, int nThreads) throws Exception {
+        ExecutorService eService = Executors.newFixedThreadPool(nThreads);
 
-    private static void generatePassword(String chars, String cur, int length) throws Exception {
+        int payloadSize = Math.max(1, chars.length() / nThreads);
+        int charsLength = chars.length();
+        int startIndex = 0;
+
+        while (startIndex < chars.length()) {
+            int startIdx = startIndex;
+            int endIdx = Math.min(charsLength, (startIndex + payloadSize));
+
+            eService.submit((() -> {
+                for (int i = startIdx; i < endIdx; i++) {
+                    try {
+                        generatePasswords(chars, String.valueOf(chars.charAt(i)), length);
+                    } catch (Exception e) {
+                        System.out.println("\n" + e.getMessage() + "\n");
+                    }
+                }
+            }));
+
+            startIndex += payloadSize;
+        }
+
+        eService.shutdown();
+        eService.awaitTermination(20, TimeUnit.MINUTES);
+    }
+
+    private static void generatePasswords(String chars, String cur, int length) throws Exception {
         if (chars == null || chars.length() == 0) {
-            throw new Exception("Empty characters");
+            throw new Exception("Empty Characters !");
         } else if (cur.length() == length) {
-            appendLineToFile(cur);
+            // System.out.println(cur);
+            // appendLineToFile(cur);
             return;
         }
 
         String charsToIterate = chars;
-        // "abcde"
-        while (charsToIterate.length() > 0) {
-            char newChar = charsToIterate.charAt(0);
-
-            if (charsToIterate.length() >= 2) {
-                charsToIterate = charsToIterate.substring(1);
-            } else {
-                charsToIterate = "";
-            }
-
-            String newCur = cur + newChar;
-            generatePassword(chars, newCur, length);
+        while (charsToIterate.length() >= 1) {
+            String newCur = cur + charsToIterate.charAt(0);
+            generatePasswords(chars, newCur, length);
+            charsToIterate = charsToIterate.substring(1);
         }
     }
 
-
-    private static void appendLineToFile(String password) throws IOException {
-        FileWriter fr = new FileWriter(new File("result.txt"), true);
-
-        fr.write(password + "\n");
-        fr.close();
-    }
+    // private static void appendLineToFile(String password) throws IOException {
+    //     FileWriter fr = new FileWriter(new File("result.txt"), true);
+    //     fr.write(password + "\n");
+    //     fr.close();
+    // }
 }
